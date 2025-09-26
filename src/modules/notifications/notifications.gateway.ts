@@ -15,11 +15,19 @@ export class NotificationsGateway
   @WebSocketServer()
   server: Server;
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    const { employeeId } = client.handshake.auth;
+
+    if (employeeId) {
+      client.join(employeeId.toString());
+      console.log(`Client ${client.id} joined room ${employeeId}`);
+    } else {
+      console.warn(`Client ${client.id} connected without employeeId`);
+    }
   }
   handleDisconnect(client: Socket) {
     console.log(`CLient disconnected: ${client.id}`);
   }
+  
   // gửi thông báo tới tất cả FE
   sendBroadcast(event: string, payload: any) {
     this.server.emit(event, payload);
@@ -27,5 +35,13 @@ export class NotificationsGateway
   // Gửi thông báo tới specific employee
   sendToEmployee(employeeId: string, payload: any) {
     this.server.to(employeeId).emit('notification', payload);
+  }
+
+  // Gửi thông báo tới employees
+  sendToMultipleEmployees(employeeIds: string[], event: string, payload: any) {
+    employeeIds.forEach((employeeId) => {
+      console.log(`Emitted event '${event}' to room '${employeeId}' with payload:`, payload);
+      this.server.to(employeeId).emit(event, payload);
+    });
   }
 }

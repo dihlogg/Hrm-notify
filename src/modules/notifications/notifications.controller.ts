@@ -1,9 +1,9 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { handleEventWithRetry } from 'src/helper/rmq-helper';
 
-@Controller('notifications')
+@Controller('Notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -28,5 +28,18 @@ export class NotificationsController {
     } catch (error) {
       console.error(error.message || 'failed to receive message from broker');
     }
+  }
+
+  @Get('GetNotificationsByEmployeeId/:id')
+  async getNotificationsByEmployeeId(@Param('id') id: string) {
+    return this.notificationsService.getNotificationsByEmployeeId(id);
+  }
+  @Get('GetLeaveRequestNotiWithConfirmId/:id')
+  async getLeaveRequestNotiWithConfirmId(@Param('id') id: string) {
+    return this.notificationsService.getLeaveRequestNotiWithConfirmId(id);
+  }
+  @Get('GetLeaveRequestNotiWithApproveId/:id')
+  async getLeaveRequestNotiWithApproveId(@Param('id') id: string) {
+    return this.notificationsService.getLeaveRequestNotiWithApproveId(id);
   }
 }
