@@ -19,6 +19,9 @@ export class Notifications {
 
   @Prop({ default: false })
   read: boolean;
+
+  @Prop({ type: [String], required: true })
+  recipients: string[]; // danh sách employeeId nhận notify
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notifications);

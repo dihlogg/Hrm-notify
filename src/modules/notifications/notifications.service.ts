@@ -14,27 +14,24 @@ export class NotificationsService {
     private notificationModel: Model<NotificationDocument>,
     private readonly notificationsGateway: NotificationsGateway,
   ) {}
-  
   async handleLeaveRequestCreated(data: any) {
+    const targetEmployees = this.getTargetEmployees(
+      data.employeeId,
+      data.employeeId,
+      data.expectedApproverId,
+      data.expectedConfirmId,
+    );
+
     const notification = new this.notificationModel({
       id: data.id,
       type: 'LEAVE_REQUEST_CREATED',
       message: `New leave request from: ${data.employee.lastName} ${data.employee.firstName}`,
       payload: data,
-      read: false,
+      recipients: targetEmployees,
+      readBy: [],
     });
     await notification.save();
 
-    const expectedApproverId = data.expectedApproverId;
-    const expectedConfirmId = data.expectedConfirmId;
-    const targetEmployees: string[] = [];
-    if (expectedApproverId) {
-      targetEmployees.push(expectedApproverId.toString());
-    }
-    if (expectedConfirmId) {
-      targetEmployees.push(expectedConfirmId.toString());
-    }
-    // Push sang websocket
     if (targetEmployees.length > 0) {
       this.notificationsGateway.sendToMultipleEmployees(
         targetEmployees,
@@ -43,26 +40,69 @@ export class NotificationsService {
       );
     }
   }
-  async logFailedMessage(data: any, headers?: any): Promise<void> {
-    console.error('Failed message:', { data, headers });
+
+  async handleLeaveRequestStatusUpdated(data: any) {
+    const targetEmployees = this.getTargetEmployees(
+      data.actorId,
+      data.employeeId,
+      data.expectedApproverId,
+      data.expectedConfirmId,
+    );
+
+    const notification = new this.notificationModel({
+      id: data.id,
+      type: 'LEAVE_REQUEST_STATUS_UPDATED',
+      message: `Leave request status updated by: ${data.actorName}`,
+      payload: data,
+      recipients: targetEmployees,
+      readBy: [],
+    });
+    await notification.save();
+
+    if (targetEmployees.length > 0) {
+      this.notificationsGateway.sendToMultipleEmployees(
+        targetEmployees,
+        'LEAVE_REQUEST_STATUS_UPDATED',
+        data,
+      );
+    }
   }
 
   async getNotificationsByEmployeeId(id: string): Promise<Notifications[]> {
     return this.notificationModel
-      .find({ 'payload.employeeId': id })
-      .sort({ createAt: -1 })
+      .find({ recipients: id })
+      .sort({ createdAt: -1 })
       .exec();
   }
-  async getLeaveRequestNotiWithConfirmId(id: string): Promise<Notifications[]> {
-    return this.notificationModel
-      .find({ 'payload.expectedConfirmId': id })
-      .sort({ createAt: -1 })
-      .exec();
+  async markAsRead(notificationId: string, employeeId: string): Promise<void> {
+    await this.notificationModel.findByIdAndUpdate(notificationId, {
+      $addToSet: { readBy: employeeId },
+    });
   }
-  async getLeaveRequestNotiWithApproveId(id: string): Promise<Notifications[]> {
-    return this.notificationModel
-      .find({ 'payload.expectedApproverId': id })
-      .sort({ createAt: -1 })
-      .exec();
+
+  // Log failed message từ queue/consumer
+  async logFailedMessage(data: any, headers?: any): Promise<void> {
+    console.error('Failed message:', { data, headers });
+  }
+
+  //actorId: ai vừa thực hiện action (tạo, confirm, approve)
+  private getTargetEmployees(
+    actorId: string,
+    employeeId: string,
+    approverId?: string,
+    confirmId?: string,
+  ): string[] {
+    const targets: string[] = [];
+    if (employeeId && employeeId !== actorId) {
+      targets.push(employeeId);
+    }
+    if (approverId && approverId !== actorId) {
+      targets.push(approverId);
+    }
+    if (confirmId && confirmId !== actorId) {
+      targets.push(confirmId);
+    }
+    
+    return targets;
   }
 }
