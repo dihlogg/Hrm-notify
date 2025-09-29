@@ -29,17 +29,31 @@ export class NotificationsController {
       console.error(error.message || 'failed to receive message from broker');
     }
   }
+  @EventPattern('LEAVE_REQUEST_STATUS_UPDATED')
+  async onLeaveRequestStatusUpdated(
+    @Payload() data: any,
+    @Ctx() context: RmqContext,
+  ) {
+    console.log(
+      `[${new Date().toISOString()}] Received message on LEAVE_REQUEST_STATUS_UPDATED:`,
+    );
+    try {
+      await handleEventWithRetry({
+        context,
+        data,
+        handler: this.notificationsService.handleLeaveRequestStatusUpdated.bind(
+          this.notificationsService,
+        ),
+        retryQueue: 'leave_request_retry_queue',
+        dlqQueue: 'leave_request_dlq',
+      });
+    } catch (error) {
+      console.error(error.message || 'failed to receive message from broker');
+    }
+  }
 
   @Get('GetNotificationsByEmployeeId/:id')
   async getNotificationsByEmployeeId(@Param('id') id: string) {
     return this.notificationsService.getNotificationsByEmployeeId(id);
-  }
-  @Get('GetLeaveRequestNotiWithConfirmId/:id')
-  async getLeaveRequestNotiWithConfirmId(@Param('id') id: string) {
-    return this.notificationsService.getLeaveRequestNotiWithConfirmId(id);
-  }
-  @Get('GetLeaveRequestNotiWithApproveId/:id')
-  async getLeaveRequestNotiWithApproveId(@Param('id') id: string) {
-    return this.notificationsService.getLeaveRequestNotiWithApproveId(id);
   }
 }
