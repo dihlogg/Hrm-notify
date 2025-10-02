@@ -15,55 +15,58 @@ export class NotificationsService {
     private readonly notificationsGateway: NotificationsGateway,
   ) {}
   async handleLeaveRequestCreated(data: any) {
+    const { leaveRequest, actor } = data;
+
     const targetEmployees = this.getTargetEmployees(
-      data.employeeId,
-      data.employeeId,
-      data.expectedApproverId,
-      data.expectedConfirmId,
+      actor.id,
+      leaveRequest.employeeId,
+      leaveRequest.expectedApproverId,
+      leaveRequest.expectedConfirmId,
     );
 
     const notification = new this.notificationModel({
-      id: data.id,
+      id: leaveRequest.id,
       type: 'LEAVE_REQUEST_CREATED',
-      message: `New leave request from: ${data.employee.lastName} ${data.employee.firstName}`,
-      payload: data,
+      message: `New leave request from: ${leaveRequest.employee.lastName} ${leaveRequest.employee.firstName}`,
+      payload: leaveRequest,
+      actor: actor,
       recipients: targetEmployees,
-      readBy: [],
     });
+
     await notification.save();
 
     if (targetEmployees.length > 0) {
       this.notificationsGateway.sendToMultipleEmployees(
         targetEmployees,
         'LEAVE_REQUEST_CREATED',
-        data,
       );
     }
   }
 
   async handleLeaveRequestStatusUpdated(data: any) {
+    const { leaveRequest, actor } = data;
+
     const targetEmployees = this.getTargetEmployees(
-      data.actorId,
-      data.employeeId,
-      data.expectedApproverId,
-      data.expectedConfirmId,
+      actor.id,
+      leaveRequest.employeeId,
+      leaveRequest.expectedApproverId,
+      leaveRequest.expectedConfirmId,
     );
 
     const notification = new this.notificationModel({
-      id: data.id,
-      type: 'LEAVE_REQUEST_STATUS_UPDATED',
-      message: `Leave request status updated by: ${data.actorName}`,
-      payload: data,
+      id: leaveRequest.id,
+      type: 'LEAVE_REQUEST_UPDATED',
+      message: `Leave request status updated by: ${actor.lastName} ${actor.firstName}`,
+      payload: leaveRequest,
+      actor,
       recipients: targetEmployees,
-      readBy: [],
     });
     await notification.save();
 
     if (targetEmployees.length > 0) {
       this.notificationsGateway.sendToMultipleEmployees(
         targetEmployees,
-        'LEAVE_REQUEST_STATUS_UPDATED',
-        data,
+        'LEAVE_REQUEST_UPDATED',
       );
     }
   }
@@ -85,7 +88,7 @@ export class NotificationsService {
     console.error('Failed message:', { data, headers });
   }
 
-  //actorId: ai vừa thực hiện action (tạo, confirm, approve)
+  //actorId: user action (create, confirm, approve)
   private getTargetEmployees(
     actorId: string,
     employeeId: string,
@@ -102,7 +105,7 @@ export class NotificationsService {
     if (confirmId && confirmId !== actorId) {
       targets.push(confirmId);
     }
-    
+
     return targets;
   }
 }

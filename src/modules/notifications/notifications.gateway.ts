@@ -27,7 +27,7 @@ export class NotificationsGateway
   handleDisconnect(client: Socket) {
     console.log(`CLient disconnected: ${client.id}`);
   }
-  
+
   // gửi thông báo tới tất cả FE
   sendBroadcast(event: string, payload: any) {
     this.server.emit(event, payload);
@@ -38,10 +38,13 @@ export class NotificationsGateway
   }
 
   // Gửi thông báo tới employees
-  sendToMultipleEmployees(employeeIds: string[], event: string, payload: any) {
+  sendToMultipleEmployees(employeeIds: string[], payload: any) {
     employeeIds.forEach((employeeId) => {
-      console.log(`Emitted event '${event}' to room '${employeeId}' with payload:`, payload);
-      this.server.to(employeeId).emit(event, payload);
+      console.log(
+        `Emitted event 'notification' to room '${employeeId}' with payload:`,
+        payload,
+      );
+      this.server.to(employeeId).emit('notification', payload);
     });
   }
 }
