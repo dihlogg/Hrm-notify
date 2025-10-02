@@ -20,11 +20,16 @@ export class Notifications {
   @Prop({ default: false })
   read: boolean;
 
+  @Prop({ default: false })
+  seen: boolean;
+
+  @Prop({ type: Object })
+  actor: any;
+
   @Prop({ type: [String], required: true })
-  recipients: string[]; // danh sách employeeId nhận notify
+  recipients: string[]; // danh sách employee nhận notify
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notifications);
 
 NotificationSchema.index({ id: 1 }, { unique: true });
-
