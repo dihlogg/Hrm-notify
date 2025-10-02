@@ -5,7 +5,7 @@ import {
   NotificationDocument,
   Notifications,
 } from './schemas/notifications.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class NotificationsService {
@@ -44,7 +44,7 @@ export class NotificationsService {
   }
 
   async handleLeaveRequestStatusUpdated(data: any) {
-    const { leaveRequest, actor } = data;
+    const { leaveRequest, actor, previousStatus, newStatus } = data;
 
     const targetEmployees = this.getTargetEmployees(
       actor.id,
@@ -56,10 +56,12 @@ export class NotificationsService {
     const notification = new this.notificationModel({
       id: leaveRequest.id,
       type: 'LEAVE_REQUEST_UPDATED',
-      message: `Leave request status updated by: ${actor.lastName} ${actor.firstName}`,
+      message: `${actor.lastName} ${actor.firstName} updated leave request status: ${previousStatus} to ${newStatus}`,
       payload: leaveRequest,
       actor,
       recipients: targetEmployees,
+      previousStatus,
+      newStatus,
     });
     await notification.save();
 
@@ -77,10 +79,32 @@ export class NotificationsService {
       .sort({ createdAt: -1 })
       .exec();
   }
-  async markAsRead(notificationId: string, employeeId: string): Promise<void> {
-    await this.notificationModel.findByIdAndUpdate(notificationId, {
-      $addToSet: { readBy: employeeId },
+
+  async getUnSeenCountByActorId(id: string): Promise<number> {
+    return this.notificationModel.countDocuments({
+      'actor.id': id,
+      seen: false,
     });
+  }
+  async markAllAsSeenByActorId(id: string): Promise<boolean> {
+    const result = await this.notificationModel.updateMany(
+      { 'actor.id': id, seen: false },
+      { $set: { seen: true } },
+    );
+    return result.matchedCount > 0;
+  }
+  async getUnReadCountByActorId(id: string): Promise<number> {
+    return this.notificationModel.countDocuments({
+      'actor.id': id,
+      read: false,
+    });
+  }
+  async markAsRead(_id: string): Promise<boolean> {
+    const result = await this.notificationModel.updateOne(
+      { _id: new Types.ObjectId(_id) },
+      { $set: { read: true } },
+    );
+    return result.modifiedCount > 0;
   }
 
   // Log failed message từ queue/consumer

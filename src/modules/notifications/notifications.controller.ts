@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Patch } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { handleEventWithRetry } from 'src/helper/rmq-helper';
@@ -42,5 +42,25 @@ export class NotificationsController {
   @Get('GetNotificationsByEmployeeId/:id')
   async getNotificationsByEmployeeId(@Param('id') id: string) {
     return this.notificationsService.getNotificationsByEmployeeId(id);
+  }
+
+  @Get('GetUnSeenCountByActorId/:id')
+  async getUnSeenCountByActorId(@Param('id') id: string) {
+    return this.notificationsService.getUnSeenCountByActorId(id);
+  }
+
+  @Patch('MarkAllAsSeenByActorId/:id')
+  async markAllAsSeenByActorId(@Param('id') id: string) {
+    return this.notificationsService.markAllAsSeenByActorId(id);
+  }
+
+  @Get('GetUnReadCountByActorId/:id')
+  async getUnReadCountByActorId(@Param('id') id: string) {
+    return this.notificationsService.getUnReadCountByActorId(id);
+  }
+
+  @Patch('MarkAsRead/:id')
+  async markAsRead(@Param('id') id: string) {
+    return this.notificationsService.markAsRead(id);
   }
 }

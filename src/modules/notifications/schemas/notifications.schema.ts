@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, StringExpressionOperatorReturningBoolean } from 'mongoose';
 
 export type NotificationDocument = Notifications & Document;
 
@@ -28,6 +28,12 @@ export class Notifications {
 
   @Prop({ type: [String], required: true })
   recipients: string[]; // danh sách employee nhận notify
+
+  @Prop()
+  previousStatus: string;
+
+  @Prop()
+  newStatus: string;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notifications);
