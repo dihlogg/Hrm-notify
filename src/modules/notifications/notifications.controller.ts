@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { handleEventWithRetry } from 'src/helper/rmq-helper';
+import { PaginationDto } from 'src/utils/pagination/pagination.dto';
 
 @Controller('Notifications')
 export class NotificationsController {
@@ -40,23 +41,29 @@ export class NotificationsController {
   }
 
   @Get('GetNotificationsByEmployeeId/:id')
-  async getNotificationsByEmployeeId(@Param('id') id: string) {
-    return this.notificationsService.getNotificationsByEmployeeId(id);
+  async getNotificationsByEmployeeId(
+    @Param('id') id: string,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.notificationsService.getNotificationsByEmployeeId(
+      id,
+      pagination,
+    );
   }
 
-  @Get('GetUnSeenCountByActorId/:id')
-  async getUnSeenCountByActorId(@Param('id') id: string) {
-    return this.notificationsService.getUnSeenCountByActorId(id);
+  @Get('GetUnSeenCountByRecipientId/:id')
+  async getUnSeenCountByRecipientId(@Param('id') id: string) {
+    return this.notificationsService.getUnSeenCountByRecipientId(id);
   }
 
-  @Patch('MarkAllAsSeenByActorId/:id')
-  async markAllAsSeenByActorId(@Param('id') id: string) {
-    return this.notificationsService.markAllAsSeenByActorId(id);
+  @Patch('MarkAllAsSeenByRecipientId/:id')
+  async markAllAsSeenByRecipientId(@Param('id') id: string) {
+    return this.notificationsService.markAllAsSeenByRecipientId(id);
   }
 
-  @Get('GetUnReadCountByActorId/:id')
-  async getUnReadCountByActorId(@Param('id') id: string) {
-    return this.notificationsService.getUnReadCountByActorId(id);
+  @Get('GetUnReadCountByRecipientId/:id')
+  async getUnReadCountByRecipientId(@Param('id') id: string) {
+    return this.notificationsService.getUnReadCountByRecipientId(id);
   }
 
   @Patch('MarkAsRead/:id')

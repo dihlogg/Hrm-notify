@@ -6,6 +6,8 @@ import {
   Notifications,
 } from './schemas/notifications.schema';
 import { Model, Types } from 'mongoose';
+import { PaginationDto } from 'src/utils/pagination/pagination.dto';
+import { paginationMongo } from 'src/utils/pagination/pagination.util';
 
 @Injectable()
 export class NotificationsService {
@@ -24,16 +26,16 @@ export class NotificationsService {
       leaveRequest.expectedConfirmId,
     );
 
-    const notification = new this.notificationModel({
+    const notifications = targetEmployees.map((recipient) => ({
       id: leaveRequest.id,
       type: 'LEAVE_REQUEST_CREATED',
       message: `New leave request from: ${leaveRequest.employee.lastName} ${leaveRequest.employee.firstName}`,
       payload: leaveRequest,
-      actor: actor,
-      recipients: targetEmployees,
-    });
+      actor,
+      recipient,
+    }));
 
-    await notification.save();
+    await this.notificationModel.insertMany(notifications);
 
     if (targetEmployees.length > 0) {
       this.notificationsGateway.sendToMultipleEmployees(
@@ -53,17 +55,18 @@ export class NotificationsService {
       leaveRequest.expectedConfirmId,
     );
 
-    const notification = new this.notificationModel({
+    const notifications = targetEmployees.map((recipient) => ({
       id: leaveRequest.id,
       type: 'LEAVE_REQUEST_UPDATED',
-      message: `${actor.lastName} ${actor.firstName} updated leave request status: ${previousStatus} to ${newStatus}`,
+      message: `${actor.lastName} ${actor.firstName} updated leave request status: ${previousStatus} → ${newStatus}`,
       payload: leaveRequest,
       actor,
-      recipients: targetEmployees,
+      recipient,
       previousStatus,
       newStatus,
-    });
-    await notification.save();
+    }));
+
+    await this.notificationModel.insertMany(notifications);
 
     if (targetEmployees.length > 0) {
       this.notificationsGateway.sendToMultipleEmployees(
@@ -73,29 +76,34 @@ export class NotificationsService {
     }
   }
 
-  async getNotificationsByEmployeeId(id: string): Promise<Notifications[]> {
-    return this.notificationModel
-      .find({ recipients: id })
-      .sort({ createdAt: -1 })
-      .exec();
+  async getNotificationsByEmployeeId(id: string, pagination: PaginationDto) {
+    return paginationMongo(
+      this.notificationModel,
+      { recipient: id },
+      {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        sort: { createdAt: -1 },
+      },
+    );
   }
 
-  async getUnSeenCountByActorId(id: string): Promise<number> {
+  async getUnSeenCountByRecipientId(id: string): Promise<number> {
     return this.notificationModel.countDocuments({
-      'actor.id': id,
+      recipient: id,
       seen: false,
     });
   }
-  async markAllAsSeenByActorId(id: string): Promise<boolean> {
+  async markAllAsSeenByRecipientId(id: string): Promise<boolean> {
     const result = await this.notificationModel.updateMany(
-      { 'actor.id': id, seen: false },
+      { recipient: id, seen: false },
       { $set: { seen: true } },
     );
     return result.matchedCount > 0;
   }
-  async getUnReadCountByActorId(id: string): Promise<number> {
+  async getUnReadCountByRecipientId(id: string): Promise<number> {
     return this.notificationModel.countDocuments({
-      'actor.id': id,
+      recipient: id,
       read: false,
     });
   }
