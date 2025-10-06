@@ -26,8 +26,8 @@ export class Notifications {
   @Prop({ type: Object })
   actor: any;
 
-  @Prop({ type: [String], required: true })
-  recipients: string[]; // danh sách employee nhận notify
+  @Prop({ required: true })
+  recipient: string; // employee nhận notify
 
   @Prop()
   previousStatus: string;
