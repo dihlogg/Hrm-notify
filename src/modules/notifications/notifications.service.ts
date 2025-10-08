@@ -45,6 +45,35 @@ export class NotificationsService {
     }
   }
 
+  async handleLeaveRequestUpdated(data: any) {
+    const { leaveRequest, actor } = data;
+
+    const targetEmployees = this.getTargetEmployees(
+      actor.id,
+      leaveRequest.employeeId,
+      leaveRequest.expectedApproverId,
+      leaveRequest.expectedConfirmId,
+    );
+
+    const notifications = targetEmployees.map((recipient) => ({
+      id: leaveRequest.id,
+      type: 'LEAVE_REQUEST_UPDATED',
+      message: `${actor.lastName} ${actor.firstName} updated leave request`,
+      payload: leaveRequest,
+      actor,
+      recipient,
+    }));
+
+    await this.notificationModel.insertMany(notifications);
+
+    if (targetEmployees.length > 0) {
+      this.notificationsGateway.sendToMultipleEmployees(
+        targetEmployees,
+        'LEAVE_REQUEST_UPDATED',
+      );
+    }
+  }
+
   async handleLeaveRequestStatusUpdated(data: any) {
     const { leaveRequest, actor, previousStatus, newStatus } = data;
 
@@ -57,8 +86,8 @@ export class NotificationsService {
 
     const notifications = targetEmployees.map((recipient) => ({
       id: leaveRequest.id,
-      type: 'LEAVE_REQUEST_UPDATED',
-      message: `${actor.lastName} ${actor.firstName} updated leave request status: ${previousStatus} → ${newStatus}`,
+      type: 'LEAVE_REQUEST_STATUS_UPDATED',
+      message: `${actor.lastName} ${actor.firstName} updated leave request status: ${previousStatus} to ${newStatus}`,
       payload: leaveRequest,
       actor,
       recipient,
@@ -71,7 +100,7 @@ export class NotificationsService {
     if (targetEmployees.length > 0) {
       this.notificationsGateway.sendToMultipleEmployees(
         targetEmployees,
-        'LEAVE_REQUEST_UPDATED',
+        'LEAVE_REQUEST_STATUS_UPDATED',
       );
     }
   }
