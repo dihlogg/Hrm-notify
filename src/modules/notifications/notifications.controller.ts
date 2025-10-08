@@ -25,6 +25,22 @@ export class NotificationsController {
   }
 
   @EventPattern('LEAVE_REQUEST_UPDATED')
+  async onLeaveRequestUpdated(
+    @Payload() data: any,
+    @Ctx() context: RmqContext,
+  ) {
+    await handleEventWithRetry({
+      context,
+      data,
+      handler: this.notificationsService.handleLeaveRequestUpdated.bind(
+        this.notificationsService,
+      ),
+      retryQueue: 'leave_request_retry_queue',
+      dlqQueue: 'leave_request_dlq',
+    });
+  }
+
+  @EventPattern('LEAVE_REQUEST_STATUS_UPDATED')
   async onLeaveRequestStatusUpdated(
     @Payload() data: any,
     @Ctx() context: RmqContext,
