@@ -1,26 +1,23 @@
 import { Module } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
-import { DlqNotificationsController } from './dlq.consumer.controller';
-import { RetryNotificationsController } from './retry.consumer.controller';
 import { NotificationsGateway } from './notifications.gateway';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   Notifications,
   NotificationSchema,
 } from './schemas/notifications.schema';
+import { KafkaModule } from 'src/kafka/kafka.module';
+import { NotificationsConsumer } from './notifications.consumer';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Notifications.name, schema: NotificationSchema },
     ]),
+    KafkaModule,
   ],
-  controllers: [
-    NotificationsController,
-    DlqNotificationsController,
-    RetryNotificationsController,
-  ],
+  controllers: [NotificationsController, NotificationsConsumer],
   providers: [NotificationsService, NotificationsGateway],
   exports: [NotificationsService, NotificationsGateway],
 })

@@ -25,15 +25,15 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
+    transport: Transport.KAFKA,
     options: {
-      urls: ['amqp://guest:guest@localhost:5672'],
-      queue: configService.get<string>('NOTIFY_QUEUE'),
-      queueOptions: {
-        durable: false,
+      client: {
+        clientId: 'hrm-notify',
+        brokers: [configService.get<string>('KAFKA_BROKER')!],
       },
-      noAck: false,
-      prefetchCount: 1,
+      consumer: {
+        groupId: 'hrm-group',
+      },
     },
   });
 
