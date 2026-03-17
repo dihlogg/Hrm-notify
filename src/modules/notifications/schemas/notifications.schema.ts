@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, StringExpressionOperatorReturningBoolean } from 'mongoose';
+import { Document } from 'mongoose';
 
 export type NotificationDocument = Notifications & Document;
 
@@ -38,4 +38,3 @@ export class Notifications {
 
 export const NotificationSchema = SchemaFactory.createForClass(Notifications);
 
-NotificationSchema.index({ id: 1 }, { unique: true });
