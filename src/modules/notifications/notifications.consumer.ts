@@ -87,4 +87,25 @@ export class NotificationsConsumer {
       await this.dlqService.sendToDlq([message], context.getTopic(), error);
     }
   }
+
+  @MessagePattern(KAFKA_TOPICS.USER_MENTIONED)
+  async onUserMentioned(@Payload() payload: any, @Ctx() context: KafkaContext) {
+    const message = context.getMessage();
+    try {
+      this.logger.log('Received USER_MENTIONED message');
+
+      const actualData = payload.data ? payload.data : payload;
+
+      await retry(
+        () => this.notificationsService.handleUserMentioned(actualData),
+        {
+          retries: 3,
+          initialDelay: 1000,
+        },
+      );
+    } catch (error) {
+      this.logger.error('Failed to process USER_MENTIONED. Sending to DLQ.');
+      await this.dlqService.sendToDlq([message], context.getTopic(), error);
+    }
+  }
 }

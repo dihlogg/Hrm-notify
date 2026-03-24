@@ -105,6 +105,32 @@ export class NotificationsService {
     }
   }
 
+  async handleUserMentioned(payload: any) {
+    const requestData = payload.data || payload;
+    const { sourceType, sourceId, authorId, authorFullName, authorAvatarUrl, mentionedIds, content } = requestData;
+
+    const validRecipients = mentionedIds.filter(id => id && id !== authorId);
+    if (validRecipients.length === 0) return;
+
+    const actionText = sourceType === 'POST' ? 'post' : 'comment';
+
+    const notifications = validRecipients.map((recipient) => ({
+      id: sourceId,
+      type: 'USER_MENTIONED',
+      message: `${authorFullName} mentioned you in a ${actionText}.`,
+      payload: { sourceType, sourceId, content },
+      actor: { id: authorId, fullName: authorFullName, avatarUrl: authorAvatarUrl },
+      recipient: recipient,
+    }));
+
+    await this.notificationModel.insertMany(notifications);
+
+    this.notificationsGateway.sendToMultipleEmployees(
+      validRecipients,
+      'USER_MENTIONED',
+    );
+  }
+
   async getNotificationsByEmployeeId(id: string, pagination: PaginationDto) {
     return paginationMongo(
       this.notificationModel,
