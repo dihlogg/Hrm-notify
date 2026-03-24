@@ -32,7 +32,7 @@ async function bootstrap() {
         brokers: [configService.get<string>('KAFKA_BROKER')!],
       },
       consumer: {
-        groupId: 'hrm-group',
+        groupId: 'hrm-notify-consumer-group',
       },
     },
   });
