@@ -5,14 +5,18 @@ import {
   MessagePattern,
   Payload,
 } from '@nestjs/microservices';
-import { DlqService } from 'src/kafka/dlq/dlq-handler.service';
-import { KAFKA_TOPICS } from 'src/kafka/config/kafka-topics.constant';
-import { retry } from 'src/utils/retry';
 import { NotificationsService } from './notifications.service';
+import { DlqService } from '../../kafka/dlq/dlq-handler.service';
+import { KAFKA_TOPICS } from '../../kafka/config/kafka-topics.constant';
+import { retry } from '../../utils/retry';
 
 @Controller()
 export class NotificationsConsumer {
   private readonly logger = new Logger(NotificationsConsumer.name);
+
+  private toError(error: unknown): Error {
+    return error instanceof Error ? error : new Error(String(error));
+  }
 
   constructor(
     private readonly notificationsService: NotificationsService,
@@ -38,7 +42,11 @@ export class NotificationsConsumer {
       this.logger.error(
         'Failed to process LEAVE_REQUEST_CREATED. Sending to DLQ.',
       );
-      await this.dlqService.sendToDlq([message], context.getTopic(), error);
+      await this.dlqService.sendToDlq(
+        [message],
+        context.getTopic(),
+        this.toError(error),
+      );
     }
   }
 
@@ -61,7 +69,11 @@ export class NotificationsConsumer {
       this.logger.error(
         'Failed to process LEAVE_REQUEST_UPDATED. Sending to DLQ.',
       );
-      await this.dlqService.sendToDlq([message], context.getTopic(), error);
+      await this.dlqService.sendToDlq(
+        [message],
+        context.getTopic(),
+        this.toError(error),
+      );
     }
   }
 
@@ -84,7 +96,11 @@ export class NotificationsConsumer {
       this.logger.error(
         'Failed to process LEAVE_REQUEST_UPDATE_STATUS. Sending to DLQ.',
       );
-      await this.dlqService.sendToDlq([message], context.getTopic(), error);
+      await this.dlqService.sendToDlq(
+        [message],
+        context.getTopic(),
+        this.toError(error),
+      );
     }
   }
 
@@ -105,7 +121,11 @@ export class NotificationsConsumer {
       );
     } catch (error) {
       this.logger.error('Failed to process USER_MENTIONED. Sending to DLQ.');
-      await this.dlqService.sendToDlq([message], context.getTopic(), error);
+      await this.dlqService.sendToDlq(
+        [message],
+        context.getTopic(),
+        this.toError(error),
+      );
     }
   }
 }

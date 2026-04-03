@@ -7,8 +7,8 @@ import {
   Notifications,
   NotificationSchema,
 } from './schemas/notifications.schema';
-import { KafkaModule } from 'src/kafka/kafka.module';
 import { NotificationsConsumer } from './notifications.consumer';
+import { KafkaModule } from '../../kafka/kafka.module';
 
 @Module({
   imports: [

@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { PaginationDto } from 'src/utils/pagination/pagination.dto';
+import { PaginationDto } from '../../utils/pagination/pagination.dto';
 
 @Controller('Notifications')
 export class NotificationsController {
