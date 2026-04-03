@@ -9,7 +9,7 @@ import {
 import * as retry from "async-retry";
 import { DlqService } from "./dlq/dlq-handler.service";
 import { IConsumer } from "./interfaces/consumer.interface";
-import { sleep } from "src/utils/sleep";
+import { sleep } from "../utils/sleep";
 
 export class KafkaConsumer implements IConsumer {
   private readonly kafka: Kafka;

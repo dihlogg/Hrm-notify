@@ -6,8 +6,8 @@ import {
   Notifications,
 } from './schemas/notifications.schema';
 import { Model, Types } from 'mongoose';
-import { PaginationDto } from 'src/utils/pagination/pagination.dto';
-import { paginationMongo } from 'src/utils/pagination/pagination.util';
+import { PaginationDto } from '../../utils/pagination/pagination.dto';
+import { paginationMongo } from '../../utils/pagination/pagination.util';
 
 @Injectable()
 export class NotificationsService {
