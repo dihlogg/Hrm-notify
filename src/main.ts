@@ -16,9 +16,10 @@ async function bootstrap() {
   //swagger config
   const config = new DocumentBuilder()
     .setTitle('HRM Notify RabbitMQ API')
-    .setDescription('HRM Notify API with RabbitMQ')
+    .setDescription('HRM Notify API')
     .setVersion('1.0')
     .addTag('Hrm Notify RabbitMQ')
+    .addServer('/hrm-notify')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
